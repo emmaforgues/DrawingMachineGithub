@@ -51,6 +51,11 @@ public class Drawer {
     lx2 = x + size;
     ly1 = y;
     ly2 = y;
+    
+    // Calculate the X coordinate of the anchor point by using the angle
+    anchorX = x + cos(angle) * size / 2;
+    // Calculate the Y coordinate of the anchor point by using the angle
+    anchorY = y + sin(angle) * size / 2;
   }
   
   // Update method
