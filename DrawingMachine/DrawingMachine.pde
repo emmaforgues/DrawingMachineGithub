@@ -11,7 +11,32 @@ private PGraphics mechanism;
 
 // Coordinates of the end point for both the lines coming from the mechanisms
 // This is the '3rd point' of the triangle
-private float endPointX, endPointY;
+private Vect2 endPoint;
+
+// 2D vector representing the line between the 2 anchor points
+private Vect2 base;
+// Float values containing the lengths of both the 'drawing' lines
+private float leftLineLength, rightLineLength;
+
+// Disclaimer: Two circles (each centered on an anchor point and with the appropriate line length as radius) were used to calculate the coordinates of the point where the 2 lines meet.
+  // The idea is that one of the two points where the circles meet is the one where the lines meet.
+  // This point is the highest one (lowest absolute y value)
+  // For more information on how this was done visit this website: http://mathworld.wolfram.com/Circle-CircleIntersection.html
+  
+// Considering the left anchor point as the coordinates (0, 0), and the line formed by both anchor points as the x-axis
+  // This variable represents the absolute coordinates of the X value of the line joining both meeting points of the circles (end point of the vector under this)
+private Vect2 circlesMeetingPointXDeltaCoords;
+  // This vector has for origin the left anchor point and for magnitude the distance between the left anchor point and the line joining both points where the circles meet
+    //It has the same angle as the base vector
+private Vect2 circlesMeetingPointXDeltaVector;
+  // This vector has for origin the end point of the vector above and for magnitude the distance between that point and the point where both lines meet
+    // It is rotated of 90 degrees counter-clockwise from the base vector
+private Vect2 circlesMeetingPointYDeltaVector;
+
+// This is the magnitude of circlesMeetingPointXDeltaVector
+private float circlesMeetingPointXDelta;
+// This is the magnitude of circlesMeetingPointYDeltaVector
+private float circlesMeetingPointYDelta;
 
 void setup() {
   size(720, 480);
@@ -29,38 +54,42 @@ void setup() {
   // Creating the second drawer directly into the array
   drawers[1] = new Drawer(mechanism, width * 3 / 4, height * 4 / 5, 50, 0.1, 1);
   
-  endPointX = random(width / 3, width * 2 / 3);
-  endPointY = random(height / 3, height * 2 / 3);
+  // Initialize this variable
+  endPoint = new Vect2();
+  
+  // Give these variable the good values, taking these values from the 2 drawing machines
+  leftLineLength = drawers[0].lineLength;
+  rightLineLength = drawers[1].lineLength;
 }
 
 void update() {
-  PVector anchorX = new PVector(drawers[0].anchorX, drawers[1].anchorX);
-  PVector anchorY = new PVector(drawers[0].anchorY, drawers[1].anchorY);
-  
   // Update both drawers before proceeding with calculations
   for (Drawer d : drawers) d.update();
   
-  PVector deltaX = new PVector(drawers[0].anchorX - anchorX.x, drawers[1].anchorX - anchorX.y);
-  PVector deltaY = new PVector(drawers[0].anchorY - anchorY.x, drawers[1].anchorY - anchorY.y);
+  // Update the value of the vector representing the line between both anchor points
+  base = new Vect2(drawers[1].anchorX - drawers[0].anchorX, drawers[1].anchorY - drawers[0].anchorY);
+  
+  circlesMeetingPointXDelta = (sq(base.magnitude()) - sq(rightLineLength) + sq(leftLineLength)) / (2 * base.magnitude());
+  circlesMeetingPointYDelta = sqrt((rightLineLength - base.magnitude() - leftLineLength) * (leftLineLength - rightLineLength - base.magnitude()) * (rightLineLength + leftLineLength - base.magnitude()) * (base.magnitude() + rightLineLength + leftLineLength)) / base.magnitude();
 
-  float AB = dist(drawers[0].anchorX, drawers[0].anchorY, drawers[1].anchorX, drawers[1].anchorY);
-  float AC = drawers[0].lineLength;
-  float BC = drawers[1].lineLength;
-  float AD = (sq(AB) + sq(AC) - sq(BC)) / (2 * AB);
-  float alpha = asin(abs(AD / AB) * abs(drawers[0].anchorY - drawers[1].anchorY) / AD);
-  float DE = AD * tan(alpha);
-  float AE = sqrt(sq(DE) + sq(AD));
-  //endPointX = drawers[0].anchorX + AE;
-  //endPointY = drawers[0].anchorY - sqrt(sq(AC) - sq(endPointX - drawers[0].anchorX));
-  
-  endPointX += deltaX.x + deltaX.y;
-  endPointY += deltaY.x + deltaY.y;
-  
+  circlesMeetingPointXDeltaVector = base.clone();
+  circlesMeetingPointXDeltaVector.setMagnitude(circlesMeetingPointXDelta);
+
+  circlesMeetingPointXDeltaCoords = new Vect2(drawers[0].anchorX + circlesMeetingPointXDeltaVector.x, drawers[0].anchorY + circlesMeetingPointXDeltaVector.y);
+
+  circlesMeetingPointYDeltaVector = circlesMeetingPointXDeltaVector.clone();
+  circlesMeetingPointYDeltaVector.rotateLeft();
+  circlesMeetingPointYDeltaVector.setMagnitude(circlesMeetingPointYDelta / 2);
+
+  endPoint.set(circlesMeetingPointXDeltaCoords.x + circlesMeetingPointYDeltaVector.x, circlesMeetingPointXDeltaCoords.y + circlesMeetingPointYDeltaVector.y);
+
   // Set the end point of both lines (one for each drawer) to the calculated point
   for (Drawer d : drawers) {
-    d.lineX = endPointX;
-    d.lineY = endPointY;
+    d.lineX = endPoint.x;
+    d.lineY = endPoint.y;
   }
+  
+  println(leftLineLength, dist(drawers[0].anchorX, drawers[0].anchorY, endPoint.x, endPoint.y), "  |  ", rightLineLength, dist(drawers[1].anchorX, drawers[1].anchorY, endPoint.x, endPoint.y));
 }
 
 void draw() {
@@ -85,7 +114,7 @@ void draw() {
   drawing.stroke(255);
   // Draw a point at the coordinates where both lines meet
   // This is what creates the actual drawing
-  drawing.point(endPointX, endPointY);
+  drawing.point(endPoint.x, endPoint.y);
   // Stop drawing ('close') the second layer containing only the drawing
   drawing.endDraw();
 
