@@ -1,9 +1,6 @@
 // Drawer class containing all the code to create both drawing mechanisms
 class Drawer {
 
-  // PGraphics object
-  PGraphics pg;
-
   // Coordinates of the mechanism
   float x, y;
   // Coordinates of the anchor point that 'attaches' the line to the mechanism
@@ -25,18 +22,19 @@ class Drawer {
   // Coordinates of both end points of the line under the big circle 
   // (used as a 'boundary' for the translation movement of said big circle)
   float lx1, lx2, ly1, ly2;
+  int outOfBoundsCounter;
+
+  Slider sizeSlider;
+  Text rotationSpeedText, translationSpeedText;
 
   // Constructor for this class
-  Drawer(PGraphics pg, float x, float y, float size, float speed, float horizontalSpeed) {
-    // PGraphics containing the drawing layer
-    // Used to draw in the draw function of this class
-    this.pg = pg;
+  Drawer(float x, float speed, float horizontalSpeed) {
     // X coordinate
     this.x = x;
-    // Y coordinate
-    this.y = y;
+    // Y coordinate (always starts at the bottom so no need for an argument to be passed through the constructor)
+    y = height * 4 / 5;
     // Size
-    this.size = size;
+    size = random(50, 120);
     // Rotation Speed
     this.speed = speed;
     // Translation Speed
@@ -52,31 +50,70 @@ class Drawer {
     lx2 = x + size;
     ly1 = y;
     ly2 = y;
+
+    // Calculate the X coordinate of the anchor point by using the angle
+    anchorX = x + cos(angle) * size / 2;
+    // Calculate the Y coordinate of the anchor point by using the angle
+    anchorY = y + sin(angle) * size / 2;
+
+    sizeSlider = new Slider(x, height - 15, 150, true, (size - 50) / 70);
+    
+    String rotationSpeedString = speed + "";
+    if (rotationSpeedString.length() > 4) rotationSpeedString = rotationSpeedString.substring(0, 4);
+    else if (rotationSpeedString.length() < 4) {
+      rotationSpeedString += "000";
+      rotationSpeedString = rotationSpeedString.substring(0, 4);
+    }
+    
+    rotationSpeedText = new Text(rotationSpeedString, x, y - 2);
+    rotationSpeedText.centerX();
+    
+    String translationSpeedString = horizontalSpeed + "";
+    if (translationSpeedString.length() > 4) translationSpeedString = translationSpeedString.substring(0, 4);
+    else if (translationSpeedString.length() < 4) {
+      translationSpeedString += "000";
+      translationSpeedString = translationSpeedString.substring(0, 4);
+    }
+    
+    translationSpeedText = new Text(translationSpeedString, x, y + 12);
+    translationSpeedText.centerX();
+  }
+
+  // Update method
+  void update(boolean paused) {
+    // Modifying the rotation angle by the speed
+    if (!paused) {
+      angle += speed;
+
+      if (outOfBoundsCounter == 60) {
+        x = lx1 + (lx2 - lx1) / 2;
+        outOfBoundsCounter = 0;
+      }
+
+      // Check if the big circle is out of bounds, if yes change its translation direction
+      if (x + size / 2 == lx2 || x - size / 2 == lx1) horizontalSpeed *= -1;
+      else if (x + size / 2 > lx2 || x - size / 2 < lx1) {
+        horizontalSpeed *= -1;
+        outOfBoundsCounter++;
+      }
+      // Modify the X coordinate by the translation speed
+      x += horizontalSpeed;
+    }
     
     // Calculate the X coordinate of the anchor point by using the angle
     anchorX = x + cos(angle) * size / 2;
     // Calculate the Y coordinate of the anchor point by using the angle
     anchorY = y + sin(angle) * size / 2;
-  }
 
-  // Update method
-  void update() {
-    // Modifying the rotation angle by the speed
-    angle += speed;
-
-    // Check if the big circle is out of bounds, if yes change its translation direction
-    if (x + size / 2 >= lx2 || x - size / 2 <= lx1) horizontalSpeed *= -1;
-    // Modify the X coordinate by the translation speed
-    x += horizontalSpeed;
-
-    // Calculate the X coordinate of the anchor point by using the angle
-    anchorX = x + cos(angle) * size / 2;
-    // Calculate the Y coordinate of the anchor point by using the angle
-    anchorY = y + sin(angle) * size / 2;
+    size = 70 * sizeSlider.value + 50;
+    
+    rotationSpeedText.setCoordinates(x, y - 2);
+    translationSpeedText.setCoordinates(x, y + 12);
   }
 
   // Draw method
-  void draw() {
+  // PGraphics containing the drawing layer
+  void draw(PGraphics pg) {
     pg.strokeWeight(0.4);
     // Set the fill color to black
     pg.fill(0);
@@ -92,13 +129,22 @@ class Drawer {
 
     // Draw the big circle of the mechanism
     pg.ellipse(x, y, size, size);
-
-    // Set the fill color to white
+    
+    //Set the fill color to white
+    pg.fill(255);
+    // Rotation Speed Text
+    rotationSpeedText.draw(pg);
+    // Translation Speed Text
+    translationSpeedText.draw(pg);
+    
+    //Set the fill color to white
     pg.fill(255);
     // Draw the anchor point
     pg.ellipse(anchorX, anchorY, 7, 7);
 
     // Draw the drawing line using the anchor coordinates and the line end point coordinates
     pg.line(anchorX, anchorY, lineX, lineY);
+
+    sizeSlider.draw(pg);
   }
 }

@@ -3,6 +3,8 @@ import point2line.*;
 // Array containing both drawers
 Drawer[] drawers;
 
+public static ArrayList<Input> inputToProcess = new ArrayList<Input>();
+
 // PGraphics used to create layers (one for the mechanism and one for the drawing)
 // Drawing Layer
 private PGraphics drawing;
@@ -38,6 +40,10 @@ private float circlesMeetingPointXDelta;
 // This is the magnitude of circlesMeetingPointYDeltaVector
 private float circlesMeetingPointYDelta;
 
+private Slider left_lineLengthSlider, right_lineLengthSlider;
+
+private Button pauseButton;
+
 void setup() {
   size(720, 480);
   smooth();
@@ -50,9 +56,9 @@ void setup() {
   // Initializing the array for both the drawers
   drawers = new Drawer[2];
   // Creating the first drawer directly into the array
-  drawers[0] = new Drawer(mechanism, width / 4, height * 4 / 5, random(50, 120), random(0.04, 0.1), 1);
+  drawers[0] = new Drawer(width / 4, random(0.04, 0.1), 1);
   // Creating the second drawer directly into the array
-  drawers[1] = new Drawer(mechanism, width * 3 / 4, height * 4 / 5, 50, 0.1, 1);
+  drawers[1] = new Drawer(width * 3 / 4, 0.1, 1);
 
   // Initialize this variable
   endPoint = new Vect2();
@@ -60,11 +66,34 @@ void setup() {
   // Give these variable the good values, taking these values from the 2 drawing machines
   leftLineLength = drawers[0].lineLength;
   rightLineLength = drawers[1].lineLength;
+  
+  // Left line length slider
+  left_lineLengthSlider = new Slider(50, 100, 100, false, (leftLineLength - 250) / 100);
+  
+  // Right line length slider
+  right_lineLengthSlider = new Slider(width - 50, 100, 100, false, (rightLineLength - 250) / 100);
+  right_lineLengthSlider.flip();
+  
+  // Pause Button Shapes for both states
+  Shape pauseButtonShape1 = new Shape(new Vect2[]{new Vect2(0, 0), new Vect2(5, 0), new Vect2(5, 15), new Vect2(0, 15)});
+  Shape pauseButtonShape2 = new Shape(new Vect2[]{new Vect2(8, 0), new Vect2(13, 0), new Vect2(13, 15), new Vect2(8, 15)});
+  Shape pauseButtonShapePressed = new Shape(new Vect2[]{new Vect2(0, 0), new Vect2(0, 15), new Vect2(10, 7.5)});
+  
+  // Pause Button initialization
+  pauseButton = new Button(10, 10, new Shape[]{pauseButtonShape1, pauseButtonShape2}, 255);
+  
+  // Pause Button Attributes
+  pauseButton.setPressedShapes(new Shape[]{pauseButtonShapePressed});
+  pauseButton.setActiveClickBounds(new Vect2[]{new Vect2(0, 0), new Vect2(8, 0), new Vect2(8, 15), new Vect2(0, 15)});
+  pauseButton.setPressedClickBounds(new Vect2[]{new Vect2(0, 0), new Vect2(8, 0), new Vect2(8, 15), new Vect2(0, 15)});
 }
 
 void update() {
+  leftLineLength = 250 + 100 * (1 - left_lineLengthSlider.value);
+  rightLineLength = 250 + 100 * (1 - right_lineLengthSlider.value);
+  
   // Update both drawers before proceeding with calculations
-  for (Drawer d : drawers) d.update();
+  for (Drawer d : drawers) d.update(pauseButton.pressed);
 
   // Update the value of the vector representing the line between both anchor points
   base = new Vect2(drawers[1].anchorX - drawers[0].anchorX, drawers[1].anchorY - drawers[0].anchorY);
@@ -86,7 +115,8 @@ void update() {
   circlesMeetingPointYDeltaVector.rotateLeft();
   // 'a' length / 2
   circlesMeetingPointYDeltaVector.setMagnitude(circlesMeetingPointYDelta / 2);
-
+  
+  // Coordinates of the point where the lines will finally meet
   endPoint.set(circlesMeetingPointXDeltaCoords.x + circlesMeetingPointYDeltaVector.x, circlesMeetingPointXDeltaCoords.y + circlesMeetingPointYDeltaVector.y);
 
   // Set the end point of both lines (one for each drawer) to the calculated point
@@ -107,9 +137,12 @@ void draw() {
 
   // Call the draw function in both drawers
   for (Drawer d : drawers) {
-    d.draw();
+    d.draw(mechanism);
   }
-
+  
+  left_lineLengthSlider.draw(mechanism);
+  right_lineLengthSlider.draw(mechanism);
+  pauseButton.draw(mechanism);
 
   // Stop drawing ('close') the first layer containing the mechanisms
   mechanism.endDraw();
@@ -133,3 +166,8 @@ void draw() {
   // It draws the layer above the mechanism
   image(drawing, 0, 0);
 }
+
+void mousePressed() { for (Input input : inputToProcess) input.mousePressed(); }
+void mouseReleased() { for (Input input : inputToProcess) input.mouseReleased(); }
+void mouseDragged() { for (Input input : inputToProcess) input.mouseDragged(); }
+void mouseClicked() { for (Input input : inputToProcess) input.mouseClicked(); }
