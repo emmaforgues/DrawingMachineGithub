@@ -1,5 +1,5 @@
 // Drawer class containing all the code to create both drawing mechanisms
-class Drawer {
+class Drawer extends Input {
 
   // Coordinates of the mechanism
   float x, y;
@@ -8,7 +8,7 @@ class Drawer {
   // Size of the big circle of the mechanism
   float size;
   // Both speeds for the rotation and translation of the big circle
-  float speed, horizontalSpeed;
+  float speed, horizontalSpeed, horizontalDelta = 1;
 
   // length of the line that will actually draw
   float lineLength;
@@ -25,10 +25,13 @@ class Drawer {
   int outOfBoundsCounter;
 
   Slider sizeSlider;
-  Text rotationSpeedText, translationSpeedText;
+
+  boolean selected;
+  Bounds clickableBounds;
 
   // Constructor for this class
   Drawer(float x, float speed, float horizontalSpeed) {
+    super();
     // X coordinate
     this.x = x;
     // Y coordinate (always starts at the bottom so no need for an argument to be passed through the constructor)
@@ -57,26 +60,8 @@ class Drawer {
     anchorY = y + sin(angle) * size / 2;
 
     sizeSlider = new Slider(x, height - 15, 150, true, (size - 50) / 70);
-    
-    String rotationSpeedString = speed + "";
-    if (rotationSpeedString.length() > 4) rotationSpeedString = rotationSpeedString.substring(0, 4);
-    else if (rotationSpeedString.length() < 4) {
-      rotationSpeedString += "000";
-      rotationSpeedString = rotationSpeedString.substring(0, 4);
-    }
-    
-    rotationSpeedText = new Text(rotationSpeedString, x, y - 2);
-    rotationSpeedText.centerX();
-    
-    String translationSpeedString = horizontalSpeed + "";
-    if (translationSpeedString.length() > 4) translationSpeedString = translationSpeedString.substring(0, 4);
-    else if (translationSpeedString.length() < 4) {
-      translationSpeedString += "000";
-      translationSpeedString = translationSpeedString.substring(0, 4);
-    }
-    
-    translationSpeedText = new Text(translationSpeedString, x, y + 12);
-    translationSpeedText.centerX();
+  
+    clickableBounds = new Bounds(new Vect2[]{new Vect2(x - size / 2, y), new Vect2(x + cos(3 * QUARTER_PI) * size / 2, y + sin(3 * QUARTER_PI) * size / 2), new Vect2(x, y - size / 2), new Vect2(x + cos(QUARTER_PI) * size / 2, y + sin(QUARTER_PI) * size / 2), new Vect2(x + size / 2, y), new Vect2(x + cos(7 * QUARTER_PI) * size / 2, y + sin(7 * QUARTER_PI) * size / 2), new Vect2(x, y + size / 2), new Vect2(x + cos(5 * QUARTER_PI) * size / 2, y + sin(5 * QUARTER_PI) * size / 2)});
   }
 
   // Update method
@@ -91,24 +76,25 @@ class Drawer {
       }
 
       // Check if the big circle is out of bounds, if yes change its translation direction
-      if (x + size / 2 == lx2 || x - size / 2 == lx1) horizontalSpeed *= -1;
-      else if (x + size / 2 > lx2 || x - size / 2 < lx1) {
-        horizontalSpeed *= -1;
+      if (x + size / 2 == lx2 || x - size / 2 == lx1) {
+        horizontalDelta *= -1;
+        outOfBoundsCounter = 0;
+      } else if (x + size / 2 > lx2 || x - size / 2 < lx1) {
+        horizontalDelta *= -1;
         outOfBoundsCounter++;
       }
       // Modify the X coordinate by the translation speed
-      x += horizontalSpeed;
+      x += horizontalSpeed * horizontalDelta;
     }
-    
+
     // Calculate the X coordinate of the anchor point by using the angle
     anchorX = x + cos(angle) * size / 2;
     // Calculate the Y coordinate of the anchor point by using the angle
     anchorY = y + sin(angle) * size / 2;
 
     size = 70 * sizeSlider.value + 50;
-    
-    rotationSpeedText.setCoordinates(x, y - 2);
-    translationSpeedText.setCoordinates(x, y + 12);
+
+    clickableBounds.setVertices(new Vect2[]{new Vect2(x - size / 2, y), new Vect2(x + cos(3 * QUARTER_PI) * size / 2, y + sin(3 * QUARTER_PI) * size / 2), new Vect2(x, y - size / 2), new Vect2(x + cos(QUARTER_PI) * size / 2, y + sin(QUARTER_PI) * size / 2), new Vect2(x + size / 2, y), new Vect2(x + cos(7 * QUARTER_PI) * size / 2, y + sin(7 * QUARTER_PI) * size / 2), new Vect2(x, y + size / 2), new Vect2(x + cos(5 * QUARTER_PI) * size / 2, y + sin(5 * QUARTER_PI) * size / 2)});
   }
 
   // Draw method
@@ -129,14 +115,16 @@ class Drawer {
 
     // Draw the big circle of the mechanism
     pg.ellipse(x, y, size, size);
+
+    if (selected) {
+      for (int i = 0; i < size / 4; i++) {
+        pg.stroke(255 - 255 * i * 4 / size);
+        pg.ellipse(x, y, size - i, size - i);
+      }
+    }
     
-    //Set the fill color to white
-    pg.fill(255);
-    // Rotation Speed Text
-    rotationSpeedText.draw(pg);
-    // Translation Speed Text
-    translationSpeedText.draw(pg);
-    
+    pg.stroke(255);
+
     //Set the fill color to white
     pg.fill(255);
     // Draw the anchor point
@@ -144,7 +132,23 @@ class Drawer {
 
     // Draw the drawing line using the anchor coordinates and the line end point coordinates
     pg.line(anchorX, anchorY, lineX, lineY);
+    
+    pg.textAlign(CENTER);
+    pg.text("Click", x, y + 6);
 
     sizeSlider.draw(pg);
+  }
+
+  public void mousePressed() {
+  }
+
+  public void mouseReleased() {
+  }
+
+  public void mouseDragged() {
+  }
+
+  public void mouseClicked() {
+    if (!clickableBounds.isOutOfBounds(mouseX, mouseY)) selected = !selected;
   }
 }

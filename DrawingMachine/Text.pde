@@ -1,63 +1,29 @@
-public class Text extends Input {
+public class Text {
   
-  protected float x, y;
-  
-  protected String text;
-  protected float textWidth, textHeight;
-  
-  protected Bounds clickableBounds;
-  
-  protected boolean centerX, centerY;
-  protected boolean selected;
+  private char[] text;
+  private float x, y;
   
   public Text(String text, float x, float y) {
-    setText(text);
-    textWidth = textWidth(text);
-    textHeight = textAscent() + textDescent();
-    
-    setCoordinates(x, y);
-    
-    clickableBounds = new Bounds(new Vect2[]{new Vect2(x, y), new Vect2(x + textWidth, y), new Vect2(x + textWidth, y - textHeight), new Vect2(x, y - textHeight)});
+    this.text = text.toCharArray();
+    this.x = x;
+    this.y = y;
   }
   
   public void draw(PGraphics pg) {
-    pg.text(text, x, y);
-  }
-  
-  public void centerX() {
-    centerX = !centerX;
-    setCoordinates(x, y);
-  }
-  
-  public void centerY() {
-    centerY = !centerY;
-    setCoordinates(x, y);
-  }
-  
-  public void setCoordinates(float x, float y) {
-    this.x = x;
-    this.y = y;
-    if (centerX) this.x -= textWidth / 2;
-    if (centerY) this.y += textHeight / 2;
-  }
-  
-  public void setText(String text) {
-    this.text = text;
-  }
-  
-  public String getText() {
-    return text;
-  }
-  
-  public void mousePressed() {
-  }
-  public void mouseReleased() {
-  }
-  public void mouseDragged() {
-  }
-  public void mouseClicked() {
-    if (selected && clickableBounds.isOutOfBounds(mouseX, mouseY)) selected = false;
-    if (!clickableBounds.isOutOfBounds(mouseX, mouseY)) selected = true;
-    println(selected);
+    pg.fill(255);
+    pg.textSize(18);
+    pg.textAlign(CENTER);
+    pg.text(text[0], x, y);
+    
+    pg.stroke(255);
+    pg.noFill();
+    pg.rect(x - 20 / 2, y - 19, 20, 24, 6);
+    
+    float x1 = x + 13;
+    float y1 = y - 3;
+    pg.fill(255);
+    pg.textSize(12);
+    pg.textAlign(LEFT);
+    pg.text(text, 1, text.length, x1, y1);
   }
 }

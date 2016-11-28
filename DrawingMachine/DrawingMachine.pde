@@ -5,6 +5,11 @@ Drawer[] drawers;
 
 public static ArrayList<Input> inputToProcess = new ArrayList<Input>();
 
+private GUI gui;
+
+private boolean paused;
+private boolean hideMechanism;
+
 // PGraphics used to create layers (one for the mechanism and one for the drawing)
 // Drawing Layer
 private PGraphics drawing;
@@ -40,12 +45,8 @@ private float circlesMeetingPointXDelta;
 // This is the magnitude of circlesMeetingPointYDeltaVector
 private float circlesMeetingPointYDelta;
 
-private Slider left_lineLengthSlider, right_lineLengthSlider;
-
-private Button pauseButton;
-
 void setup() {
-  size(720, 480);
+  size(720, 600);
   smooth();
 
   //creating the layer for the drawing with the screen size
@@ -63,37 +64,20 @@ void setup() {
   // Initialize this variable
   endPoint = new Vect2();
 
-  // Give these variable the good values, taking these values from the 2 drawing machines
-  leftLineLength = drawers[0].lineLength;
-  rightLineLength = drawers[1].lineLength;
-  
-  // Left line length slider
-  left_lineLengthSlider = new Slider(50, 100, 100, false, (leftLineLength - 250) / 100);
-  
-  // Right line length slider
-  right_lineLengthSlider = new Slider(width - 50, 100, 100, false, (rightLineLength - 250) / 100);
-  right_lineLengthSlider.flip();
-  
-  // Pause Button Shapes for both states
-  Shape pauseButtonShape1 = new Shape(new Vect2[]{new Vect2(0, 0), new Vect2(5, 0), new Vect2(5, 15), new Vect2(0, 15)});
-  Shape pauseButtonShape2 = new Shape(new Vect2[]{new Vect2(8, 0), new Vect2(13, 0), new Vect2(13, 15), new Vect2(8, 15)});
-  Shape pauseButtonShapePressed = new Shape(new Vect2[]{new Vect2(0, 0), new Vect2(0, 15), new Vect2(10, 7.5)});
-  
-  // Pause Button initialization
-  pauseButton = new Button(10, 10, new Shape[]{pauseButtonShape1, pauseButtonShape2}, 255);
-  
-  // Pause Button Attributes
-  pauseButton.setPressedShapes(new Shape[]{pauseButtonShapePressed});
-  pauseButton.setActiveClickBounds(new Vect2[]{new Vect2(0, 0), new Vect2(8, 0), new Vect2(8, 15), new Vect2(0, 15)});
-  pauseButton.setPressedClickBounds(new Vect2[]{new Vect2(0, 0), new Vect2(8, 0), new Vect2(8, 15), new Vect2(0, 15)});
+  gui = new GUI(drawers);
 }
 
 void update() {
-  leftLineLength = 250 + 100 * (1 - left_lineLengthSlider.value);
-  rightLineLength = 250 + 100 * (1 - right_lineLengthSlider.value);
-  
+  surface.setTitle("Drawing Machine - " + nfc(frameRate, -2) + "fps");
+
+  gui.update();
+
+  // Give these variable the good values, taking these values from the 2 drawing machines
+  leftLineLength = drawers[0].lineLength;
+  rightLineLength = drawers[1].lineLength;
+
   // Update both drawers before proceeding with calculations
-  for (Drawer d : drawers) d.update(pauseButton.pressed);
+  for (Drawer d : drawers) d.update(paused);
 
   // Update the value of the vector representing the line between both anchor points
   base = new Vect2(drawers[1].anchorX - drawers[0].anchorX, drawers[1].anchorY - drawers[0].anchorY);
@@ -115,7 +99,7 @@ void update() {
   circlesMeetingPointYDeltaVector.rotateLeft();
   // 'a' length / 2
   circlesMeetingPointYDeltaVector.setMagnitude(circlesMeetingPointYDelta / 2);
-  
+
   // Coordinates of the point where the lines will finally meet
   endPoint.set(circlesMeetingPointXDeltaCoords.x + circlesMeetingPointYDeltaVector.x, circlesMeetingPointXDeltaCoords.y + circlesMeetingPointYDeltaVector.y);
 
@@ -135,17 +119,18 @@ void draw() {
   // Set the background to black in order to 'refresh' the screen
   mechanism.background(0);
 
-  // Call the draw function in both drawers
-  for (Drawer d : drawers) {
-    d.draw(mechanism);
-  }
-  
-  left_lineLengthSlider.draw(mechanism);
-  right_lineLengthSlider.draw(mechanism);
-  pauseButton.draw(mechanism);
+  if (hideMechanism) mechanism.endDraw();
+  else {
+    gui.draw(mechanism);
 
-  // Stop drawing ('close') the first layer containing the mechanisms
-  mechanism.endDraw();
+    // Call the draw function in both drawers
+    for (Drawer d : drawers) {
+      d.draw(mechanism);
+    }
+
+    // Stop drawing ('close') the first layer containing the mechanisms
+    mechanism.endDraw();
+  }
 
   // Start drawing ('open') the second layer containing only the drawing
   // Note that the background is not set to black because the drawing has to stay visible and not disappear every update
@@ -167,7 +152,30 @@ void draw() {
   image(drawing, 0, 0);
 }
 
-void mousePressed() { for (Input input : inputToProcess) input.mousePressed(); }
-void mouseReleased() { for (Input input : inputToProcess) input.mouseReleased(); }
-void mouseDragged() { for (Input input : inputToProcess) input.mouseDragged(); }
-void mouseClicked() { for (Input input : inputToProcess) input.mouseClicked(); }
+void keyPressed() {
+  if (key == 'S' || key == 's') paused = !paused;
+  else if (key == 'C' || key == 'c') drawing.clear();
+  else if (key == 'H' || key == 'h') hideMechanism = !hideMechanism;
+  else if (keyCode == UP) {
+    for (Drawer drawer : drawers) if (drawer.selected) drawer.speed += 0.01;
+  } else if (keyCode == DOWN) {
+    for (Drawer drawer : drawers) if (drawer.selected) drawer.speed -= 0.01;
+  } else if (keyCode == LEFT) {
+    for (Drawer drawer : drawers) if (drawer.selected) drawer.horizontalSpeed -= 0.1;
+  } else if (keyCode == RIGHT) {
+    for (Drawer drawer : drawers) if (drawer.selected) drawer.horizontalSpeed += 0.1;
+  } else if (key == 'P' || key == 'p') saveFrame("test.png");
+}
+
+void mousePressed() {
+  for (Input input : inputToProcess) input.mousePressed();
+}
+void mouseReleased() { 
+  for (Input input : inputToProcess) input.mouseReleased();
+}
+void mouseDragged() { 
+  for (Input input : inputToProcess) input.mouseDragged();
+}
+void mouseClicked() { 
+  for (Input input : inputToProcess) input.mouseClicked();
+}
