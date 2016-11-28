@@ -1,13 +1,13 @@
-public abstract class Input {
-  
-  public Input() {
+abstract class Input {
+
+  Input() {
     DrawingMachine.inputToProcess.add(this);
   }
-  
-  public abstract void draw(PGraphics pg);
-  
-  public abstract void mousePressed();
-  public abstract void mouseReleased();
-  public abstract void mouseDragged();
-  public abstract void mouseClicked();
+
+  abstract void draw(PGraphics pg);
+
+  abstract void mousePressed();
+  abstract void mouseReleased();
+  abstract void mouseDragged();
+  abstract void mouseClicked();
 }

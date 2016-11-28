@@ -1,18 +1,18 @@
-public class Slider extends Input {
-  
-  protected float x, y;
-  protected Vect2 t1, t2, t3;
-  protected float sliderLength;
-  protected boolean isHorizontal;
-  protected float value;
-  
-  protected Bounds clickableBounds;
-  protected Bounds sliderBounds;
+class Slider extends Input {
 
-  protected boolean clicking;
-  protected int flipped = 1;
+  float x, y;
+  Vect2 t1, t2, t3;
+  float sliderLength;
+  boolean isHorizontal;
+  float value;
 
-  public Slider(float x, float y, float sliderLength, boolean isHorizontal, float value) {
+  Bounds clickableBounds;
+  Bounds sliderBounds;
+
+  boolean clicking;
+  int flipped = 1;
+
+  Slider(float x, float y, float sliderLength, boolean isHorizontal, float value) {
     super();
     this.x = x;
     this.y = y;
@@ -36,7 +36,7 @@ public class Slider extends Input {
     else sliderBounds = new Bounds(new Vect2[]{new Vect2(0, y - sliderLength / 2), new Vect2(0, y + sliderLength / 2), new Vect2(width, y + sliderLength / 2), new Vect2(width, y - sliderLength / 2)});
   }
 
-  public void tick() {
+  void tick() {
     if (isHorizontal) {
       t1.set(x - sliderLength / 2 + (sliderLength - 10) * value, y);
       t2.set(x - sliderLength / 2 + 5 + (sliderLength - 10) * value, y - flipped * 7);
@@ -50,7 +50,7 @@ public class Slider extends Input {
     clickableBounds.setVertices(new Vect2[]{t1, t2, t3});
   }
 
-  public void draw(PGraphics pg) {
+  void draw(PGraphics pg) {
     tick();
 
     if (isHorizontal) {
@@ -65,18 +65,20 @@ public class Slider extends Input {
 
     pg.triangle(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y);
   }
-  
-  public void flip() { flipped *= -1; }
 
-  public void mousePressed() {
+  void flip() { 
+    flipped *= -1;
+  }
+
+  void mousePressed() {
     if (!clickableBounds.isOutOfBounds(mouseX, mouseY)) clicking = true;
   }
 
-  public void mouseReleased() {
+  void mouseReleased() {
     clicking = false;
   }
 
-  public void mouseDragged() {
+  void mouseDragged() {
     if (clicking && !sliderBounds.isOutOfBounds(mouseX, mouseY)) {
       if (isHorizontal) {
         value = (mouseX - (x - sliderLength / 2)) / sliderLength;
@@ -86,6 +88,6 @@ public class Slider extends Input {
     }
   }
 
-  public void mouseClicked() {
+  void mouseClicked() {
   }
 }

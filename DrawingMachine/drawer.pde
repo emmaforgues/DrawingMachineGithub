@@ -60,7 +60,7 @@ class Drawer extends Input {
     anchorY = y + sin(angle) * size / 2;
 
     sizeSlider = new Slider(x, height - 15, 150, true, (size - 50) / 70);
-  
+
     clickableBounds = new Bounds(new Vect2[]{new Vect2(x - size / 2, y), new Vect2(x + cos(3 * QUARTER_PI) * size / 2, y + sin(3 * QUARTER_PI) * size / 2), new Vect2(x, y - size / 2), new Vect2(x + cos(QUARTER_PI) * size / 2, y + sin(QUARTER_PI) * size / 2), new Vect2(x + size / 2, y), new Vect2(x + cos(7 * QUARTER_PI) * size / 2, y + sin(7 * QUARTER_PI) * size / 2), new Vect2(x, y + size / 2), new Vect2(x + cos(5 * QUARTER_PI) * size / 2, y + sin(5 * QUARTER_PI) * size / 2)});
   }
 
@@ -122,7 +122,7 @@ class Drawer extends Input {
         pg.ellipse(x, y, size - i, size - i);
       }
     }
-    
+
     pg.stroke(255);
 
     //Set the fill color to white
@@ -132,23 +132,23 @@ class Drawer extends Input {
 
     // Draw the drawing line using the anchor coordinates and the line end point coordinates
     pg.line(anchorX, anchorY, lineX, lineY);
-    
+
     pg.textAlign(CENTER);
     pg.text("Click", x, y + 6);
 
     sizeSlider.draw(pg);
   }
 
-  public void mousePressed() {
+  void mousePressed() {
   }
 
-  public void mouseReleased() {
+  void mouseReleased() {
   }
 
-  public void mouseDragged() {
+  void mouseDragged() {
   }
 
-  public void mouseClicked() {
+  void mouseClicked() {
     if (!clickableBounds.isOutOfBounds(mouseX, mouseY)) selected = !selected;
   }
 }

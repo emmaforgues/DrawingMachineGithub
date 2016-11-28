@@ -1,16 +1,12 @@
 // Class containing all the GUI (Graphical User Interface) elements
 // Used to keep the code clean and easy to read
-public class GUI {
+class GUI {
 
-  private Text stop, clear, print, hide;
+  Text stop, clear, print, hide;
 
-  private Slider left_lineLengthSlider, right_lineLengthSlider;
+  Slider left_lineLengthSlider, right_lineLengthSlider;
 
-  private Drawer[] drawers;
-
-  public GUI(Drawer[] drawers) {
-    this.drawers = drawers;
-
+  GUI() {
     stop = new Text("Stop/Start", 20, 25);
     clear = new Text("Clear", 120, 25);
     print = new Text("Print", 190, 25);
@@ -24,12 +20,12 @@ public class GUI {
     right_lineLengthSlider.flip();
   }
 
-  public void update() {
+  void update() {
     drawers[0].lineLength = 250 + 100 * (1 - left_lineLengthSlider.value);
     drawers[1].lineLength = 250 + 100 * (1 - right_lineLengthSlider.value);
   }
 
-  public void draw(PGraphics pg) {
+  void draw(PGraphics pg) {
     stop.draw(pg);
     clear.draw(pg);
     print.draw(pg);
@@ -46,7 +42,7 @@ public class GUI {
     right_lineLengthSlider.draw(pg);
   }
 
-  private void drawKeys(PGraphics pg, float x, float y, boolean up, boolean right, boolean down, boolean left) {
+  void drawKeys(PGraphics pg, float x, float y, boolean up, boolean right, boolean down, boolean left) {
     pg.noFill();
     pg.stroke(255);
     pg.rect(x - 20 / 2, y + 1, 20, 12, 4);

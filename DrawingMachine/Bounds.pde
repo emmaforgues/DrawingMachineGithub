@@ -1,16 +1,16 @@
-public class Bounds {
+class Bounds {
 
-  private Vect2[] vertices;
-  
-  public Bounds(Vect2[] vertices) {
+  Vect2[] vertices;
+
+  Bounds(Vect2[] vertices) {
     this.vertices = vertices;
   }
 
-  public void setVertices(Vect2[] vertices) {
+  void setVertices(Vect2[] vertices) {
     this.vertices = vertices;
   }
 
-  public boolean isOutOfBounds(Vect2 coords) {
+  boolean isOutOfBounds(Vect2 coords) {
     Vect2 lowestPoint = new Vect2(vertices[0].x, vertices[0].y);
     Vect2 highestPoint = new Vect2(vertices[0].x, vertices[0].y);
 
@@ -26,7 +26,7 @@ public class Bounds {
     else return false;
   }
 
-  public boolean isOutOfBounds(float x, float y) {
+  boolean isOutOfBounds(float x, float y) {
     return isOutOfBounds(new Vect2(x, y));
   }
 }
