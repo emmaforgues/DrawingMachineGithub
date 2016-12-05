@@ -1,5 +1,5 @@
 // Drawer class containing all the code to create both drawing mechanisms
-class Drawer extends Input {
+class Drawer {
 
   // Coordinates of the mechanism
   float x, y;
@@ -21,13 +21,10 @@ class Drawer extends Input {
   float angle;
   // Coordinates of both end points of the line under the big circle 
   // (used as a 'boundary' for the translation movement of said big circle)
-  float lx1, lx2, ly1, ly2;
+  float lx1, lx2;
   int outOfBoundsCounter;
 
   Slider sizeSlider;
-
-  boolean selected;
-  Bounds clickableBounds;
 
   // Constructor for this class
   Drawer(float x, float speed, float horizontalSpeed) {
@@ -35,7 +32,7 @@ class Drawer extends Input {
     // X coordinate
     this.x = x;
     // Y coordinate (always starts at the bottom so no need for an argument to be passed through the constructor)
-    y = height * 4 / 5;
+    y = height * 3.2 / 5;
     // Size
     size = random(50, 120);
     // Rotation Speed
@@ -51,17 +48,13 @@ class Drawer extends Input {
     // Coordinates of the boundary line under the big circle
     lx1 = x - size;
     lx2 = x + size;
-    ly1 = y;
-    ly2 = y;
 
     // Calculate the X coordinate of the anchor point by using the angle
     anchorX = x + cos(angle) * size / 2;
     // Calculate the Y coordinate of the anchor point by using the angle
     anchorY = y + sin(angle) * size / 2;
 
-    sizeSlider = new Slider(x, height - 15, 150, true, (size - 50) / 70);
-
-    clickableBounds = new Bounds(new Vect2[]{new Vect2(x - size / 2, y), new Vect2(x + cos(3 * QUARTER_PI) * size / 2, y + sin(3 * QUARTER_PI) * size / 2), new Vect2(x, y - size / 2), new Vect2(x + cos(QUARTER_PI) * size / 2, y + sin(QUARTER_PI) * size / 2), new Vect2(x + size / 2, y), new Vect2(x + cos(7 * QUARTER_PI) * size / 2, y + sin(7 * QUARTER_PI) * size / 2), new Vect2(x, y + size / 2), new Vect2(x + cos(5 * QUARTER_PI) * size / 2, y + sin(5 * QUARTER_PI) * size / 2)});
+    sizeSlider = new Slider(x, height - 150, 150, true, (size - 50) / 70);
   }
 
   // Update method
@@ -91,10 +84,13 @@ class Drawer extends Input {
     anchorX = x + cos(angle) * size / 2;
     // Calculate the Y coordinate of the anchor point by using the angle
     anchorY = y + sin(angle) * size / 2;
-
+    
+    float ssize = size;
     size = 70 * sizeSlider.value + 50;
-
-    clickableBounds.setVertices(new Vect2[]{new Vect2(x - size / 2, y), new Vect2(x + cos(3 * QUARTER_PI) * size / 2, y + sin(3 * QUARTER_PI) * size / 2), new Vect2(x, y - size / 2), new Vect2(x + cos(QUARTER_PI) * size / 2, y + sin(QUARTER_PI) * size / 2), new Vect2(x + size / 2, y), new Vect2(x + cos(7 * QUARTER_PI) * size / 2, y + sin(7 * QUARTER_PI) * size / 2), new Vect2(x, y + size / 2), new Vect2(x + cos(5 * QUARTER_PI) * size / 2, y + sin(5 * QUARTER_PI) * size / 2)});
+    
+    // Update the coordinates of the translation line so that it isn't too big or too small for the big circle
+    lx1 -= (size - ssize) / 2;
+    lx2 += (size - ssize) / 2;
   }
 
   // Draw method
@@ -107,21 +103,14 @@ class Drawer extends Input {
     pg.stroke(255);
 
     // Draw the boundary line
-    pg.line(lx1, ly1, lx2, ly2);
+    pg.line(lx1, y, lx2, y);
     // Draw the left side circle at the end of the boundary line
-    pg.ellipse(lx1 - 5, ly1, 10, 10);
+    pg.ellipse(lx1 - 5, y, 10, 10);
     // Draw the right side circle at the end of the boundary line
-    pg.ellipse(lx2 + 5, ly2, 10, 10);
+    pg.ellipse(lx2 + 5, y, 10, 10);
 
     // Draw the big circle of the mechanism
     pg.ellipse(x, y, size, size);
-
-    if (selected) {
-      for (int i = 0; i < size / 4; i++) {
-        pg.stroke(255 - 255 * i * 4 / size);
-        pg.ellipse(x, y, size - i, size - i);
-      }
-    }
 
     pg.stroke(255);
 
@@ -133,22 +122,6 @@ class Drawer extends Input {
     // Draw the drawing line using the anchor coordinates and the line end point coordinates
     pg.line(anchorX, anchorY, lineX, lineY);
 
-    pg.textAlign(CENTER);
-    pg.text("Click", x, y + 6);
-
     sizeSlider.draw(pg);
-  }
-
-  void mousePressed() {
-  }
-
-  void mouseReleased() {
-  }
-
-  void mouseDragged() {
-  }
-
-  void mouseClicked() {
-    if (!clickableBounds.isOutOfBounds(mouseX, mouseY)) selected = !selected;
   }
 }

@@ -1,7 +1,19 @@
 abstract class Input {
-
+  
+  ArrayList<Runnable> onClick;
+  
   Input() {
+    onClick = new ArrayList<Runnable>();
+    
     DrawingMachine.inputToProcess.add(this);
+  }
+  
+  void addOnClickRunnable(Runnable run) {
+    onClick.add(run);
+  }
+  
+  void mouseClicked() {
+    if (click()) for (Runnable run : onClick) run.run();
   }
 
   abstract void draw(PGraphics pg);
@@ -9,5 +21,5 @@ abstract class Input {
   abstract void mousePressed();
   abstract void mouseReleased();
   abstract void mouseDragged();
-  abstract void mouseClicked();
+  abstract boolean click();
 }

@@ -88,6 +88,7 @@ class Slider extends Input {
     }
   }
 
-  void mouseClicked() {
+  boolean click() {
+    return false;
   }
 }

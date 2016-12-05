@@ -11,14 +11,11 @@ static ArrayList<Input> inputToProcess = new ArrayList<Input>();
 // This is mostly a collection of UI elements used for code clarity
 GUI gui;
 
-// True when the mechanism is paused
-boolean paused;
-//True when the mechanism shouldn't be showed
-boolean hideMechanism;
-
 // PGraphics used to create layers (one for the mechanism and one for the drawing)
 // Drawing Layer
 PGraphics drawing;
+// Temporary layer used to draw images when the mechanism is hidden
+PGraphics temporary;
 // Mechanism Layer
 PGraphics mechanism;
 
@@ -52,11 +49,13 @@ float circlesMeetingPointXDelta;
 float circlesMeetingPointYDelta;
 
 void setup() {
-  size(720, 600);
+  size(720, 680);
   smooth();
 
   //creating the layer for the drawing with the screen size
   drawing = createGraphics(width, height);
+  temporary = createGraphics(width, height);
+  temporary.imageMode(CENTER);
   //layer for mechanism with the screen size
   mechanism = createGraphics(width, height);
 
@@ -86,7 +85,7 @@ void update() {
   rightLineLength = drawers[1].lineLength;
 
   // Update both drawers before proceeding with calculations
-  for (Drawer d : drawers) d.update(paused);
+  for (Drawer d : drawers) d.update(gui.buttons.get("pause").clicked || gui.buttons.get("help").clicked);
 
   // Update the value of the vector representing the line between both anchor points
   base = new Vect2(drawers[1].anchorX - drawers[0].anchorX, drawers[1].anchorY - drawers[0].anchorY);
@@ -129,16 +128,16 @@ void draw() {
   mechanism.background(0);
 
   // If the mechanism should be hidden, simply stop drawing it here
-  if (hideMechanism) mechanism.endDraw();
+  if (gui.buttons.get("hideUI").clicked) mechanism.endDraw();
   // Else, draw the whole mechanism
   else {
-    //Draw the GUI
-    gui.draw(mechanism);
-
     // Call the draw function in both drawers
     for (Drawer d : drawers) {
       d.draw(mechanism);
     }
+    
+    //Draw the GUI
+    gui.draw(mechanism);
 
     // Stop drawing ('close') the first layer containing the mechanisms
     mechanism.endDraw();
@@ -155,41 +154,49 @@ void draw() {
 
   // Stop drawing ('close') the second layer containing only the drawing
   drawing.endDraw();
-
+  
+  // Start drawing ('open') the temporary layer
+  temporary.beginDraw();
+  // Clear the layer so it doesn't hide the mechanism which is under it
+  temporary.clear();
+  
+  // For every button present on the screen it will draw the according image on the temporary layer only if the mouse is currently on the said button
+  // This feature is used to draw the buttons when the mouse is over them when the mechanism is hidden
+  for (Button button : gui.buttons.values()) {
+    if (button.pointIsOver(mouseX, mouseY)) temporary.image(button.clicked ? button.overClickedImg : button.overImg, button.x, button.y);
+  }
+  
+  // Stop drawing ('close') the temporary layer
+  temporary.endDraw();
+  
   // image() draws an image on the screen at specified coordinates
   // The image being drawn here is the mechanism layer which contains both mechanisms
   image(mechanism, 0, 0);
-  // As for the line above, this draws the second layer containing the drawing
+  // This draws the temporary layer over the mechanism but underneath the drawing
+  image(temporary, 0, 0);
+  // As for the lines above, this draws the second layer containing the drawing
   // It draws the layer above the mechanism
   image(drawing, 0, 0);
 }
 
 // Check for keyboard input
 void keyPressed() {
-  // Pause the mechanism when pressing 'P'
-  if (key == 'S' || key == 's') paused = !paused;
-  // Clear the drawing when pressing 'C'
-  else if (key == 'C' || key == 'c') drawing.clear();
-  // Hide the mechanism when pressing 'H'
-  else if (key == 'H' || key == 'h') hideMechanism = !hideMechanism;
   // Increase the rotation speed of the selected drawers when pressing the Up-Arrow
-  else if (keyCode == UP) {
-    for (Drawer drawer : drawers) if (drawer.selected) drawer.speed += 0.01;
+  if (keyCode == UP) {
+    for (Drawer drawer : drawers) drawer.speed += 0.01;
   }
   // Decrease the rotation speed of the selected drawers when pressing the Down-Arrow
   else if (keyCode == DOWN) {
-    for (Drawer drawer : drawers) if (drawer.selected) drawer.speed -= 0.01;
+    for (Drawer drawer : drawers) drawer.speed -= 0.01;
   }
   // Decrease the translation speed of the selected drawers when pressing the Left-Arrow
   else if (keyCode == LEFT) {
-    for (Drawer drawer : drawers) if (drawer.selected) drawer.horizontalSpeed -= 0.1;
+    for (Drawer drawer : drawers) drawer.horizontalSpeed -= 0.1;
   }
   // Increase the translation speed of the selected drawers when pressing the Right-Arrow
   else if (keyCode == RIGHT) {
-    for (Drawer drawer : drawers) if (drawer.selected) drawer.horizontalSpeed += 0.1;
+    for (Drawer drawer : drawers) drawer.horizontalSpeed += 0.1;
   }
-  // "Print" the current screen with all the on-screen elements to the sketch folder when pressing 'P'
-  else if (key == 'P' || key == 'p') saveFrame("screenPrint##.png");
 }
 
 void mousePressed() {
