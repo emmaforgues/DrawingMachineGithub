@@ -23,7 +23,8 @@ class Drawer {
   // (used as a 'boundary' for the translation movement of said big circle)
   float lx1, lx2;
   int outOfBoundsCounter;
-
+  
+  // Slider used for changing the size of the circle
   Slider sizeSlider;
 
   // Constructor for this class
@@ -53,7 +54,8 @@ class Drawer {
     anchorX = x + cos(angle) * size / 2;
     // Calculate the Y coordinate of the anchor point by using the angle
     anchorY = y + sin(angle) * size / 2;
-
+    
+    // Initialize the slider for ther circle size
     sizeSlider = new Slider(x, height - 150, 150, true, (size - 50) / 70);
   }
 
@@ -62,7 +64,9 @@ class Drawer {
     // Modifying the rotation angle by the speed
     if (!paused) {
       angle += speed;
-
+      
+      // This checks if the circle has been out of bounds for more than 1 sec
+        // If true, it places the circle at the center of the line and resets the outOfBounds counter
       if (outOfBoundsCounter == 60) {
         x = lx1 + (lx2 - lx1) / 2;
         outOfBoundsCounter = 0;
@@ -85,6 +89,7 @@ class Drawer {
     // Calculate the Y coordinate of the anchor point by using the angle
     anchorY = y + sin(angle) * size / 2;
     
+    // This is used to calculate the difference between the size at the last update and the size now
     float ssize = size;
     size = 70 * sizeSlider.value + 50;
     
@@ -121,7 +126,8 @@ class Drawer {
 
     // Draw the drawing line using the anchor coordinates and the line end point coordinates
     pg.line(anchorX, anchorY, lineX, lineY);
-
+    
+    // Draw the slider on the given PGraphics
     sizeSlider.draw(pg);
   }
 }
